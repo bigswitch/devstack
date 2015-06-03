@@ -168,6 +168,10 @@ NEUTRON_CREATE_INITIAL_NETWORKS=${NEUTRON_CREATE_INITIAL_NETWORKS:-True}
 ## Provider Network Information
 PROVIDER_SUBNET_NAME=${PROVIDER_SUBNET_NAME:-"provider_net"}
 
+# Define the public bridge that will transmit traffic from VMs to the
+# physical network - used by both the OVS and Linux Bridge drivers.
+PUBLIC_BRIDGE=${PUBLIC_BRIDGE:-br-ex}
+
 # Use flat providernet for public network
 #
 # If Q_USE_PROVIDERNET_FOR_PUBLIC=True, use a flat provider network
@@ -1293,17 +1297,6 @@ function _neutron_configure_router_v6 {
         # Override global IPV6_ROUTER_GW_IP with the true value from neutron
         IPV6_ROUTER_GW_IP=`neutron port-list -c fixed_ips | grep $ipv6_pub_subnet_id | awk -F '"' -v subnet_id=$ipv6_pub_subnet_id '$4 == subnet_id { print $8; }'`
         die_if_not_set $LINENO IPV6_ROUTER_GW_IP "Failure retrieving IPV6_ROUTER_GW_IP"
-
-        # The ovs_base_configure_l3_agent function flushes the public
-        # bridge's ip addresses, so turn IPv6 support in the host off
-        # and then on to recover the public bridge's link local address
-        sudo sysctl -w net.ipv6.conf.${PUBLIC_BRIDGE}.disable_ipv6=1
-        sudo sysctl -w net.ipv6.conf.${PUBLIC_BRIDGE}.disable_ipv6=0
-        if ! ip -6 addr show dev $PUBLIC_BRIDGE | grep 'scope global'; then
-            # Create an IPv6 ULA address for PUBLIC_BRIDGE if one is not present
-            IPV6_BRIDGE_ULA=`uuidgen | sed s/-//g | cut -c 23- | sed -e "s/\(..\)\(....\)\(....\)/\1:\2:\3/"`
-            sudo ip -6 addr add fd$IPV6_BRIDGE_ULA::1 dev $PUBLIC_BRIDGE
-        fi
 
         if is_neutron_ovs_base_plugin && [[ "$Q_USE_NAMESPACE" = "True" ]]; then
             local ext_gw_interface=$(_neutron_get_ext_gw_interface)
