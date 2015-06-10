@@ -330,6 +330,9 @@ function configure_tempest {
         iniset $TEMPEST_CONFIG image http_image $TEMPEST_HTTP_IMAGE
     fi
 
+    # Image Features
+    iniset $TEMPEST_CONFIG image-feature-enabled deactivate_image True
+
     # Auth
     TEMPEST_ALLOW_TENANT_ISOLATION=${TEMPEST_ALLOW_TENANT_ISOLATION:-$TEMPEST_HAS_ADMIN}
     iniset $TEMPEST_CONFIG auth allow_tenant_isolation ${TEMPEST_ALLOW_TENANT_ISOLATION:-True}
@@ -435,6 +438,7 @@ function configure_tempest {
     # Ceilometer API optimization happened in Juno that allows to run more tests in tempest.
     # Once Tempest retires support for icehouse this flag can be removed.
     iniset $TEMPEST_CONFIG telemetry too_slow_to_test "False"
+    iniset $TEMPEST_CONFIG telemetry-feature-enabled events "True"
 
     # Object Store
     local object_storage_api_extensions=${OBJECT_STORAGE_API_EXTENSIONS:-"all"}
