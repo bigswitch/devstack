@@ -11,7 +11,7 @@
 MY_XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
-MYSQL_DRIVER=${MYSQL_DRIVER:-PyMySQL}
+MYSQL_DRIVER=${MYSQL_DRIVER:-MySQL-python}
 # Force over to pymysql driver by default if we are using it.
 if is_service_enabled mysql; then
     if [[ "$MYSQL_DRIVER" == "PyMySQL" ]]; then
@@ -165,6 +165,8 @@ function install_database_python_mysql {
     pip_install_gr $MYSQL_DRIVER
     if [[ "$MYSQL_DRIVER" == "MySQL-python" ]]; then
         ADDITIONAL_VENV_PACKAGES+=",MySQL-python"
+    elif [[ "$MYSQL_DRIVER" == "PyMySQL" ]]; then
+        ADDITIONAL_VENV_PACKAGES+=",PyMySQL"
     fi
 }
 
