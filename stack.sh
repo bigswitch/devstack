@@ -505,7 +505,7 @@ source $TOP_DIR/lib/rpc_backend
 check_rpc_backend
 
 # Service to enable with SSL if ``USE_SSL`` is True
-SSL_ENABLED_SERVICES="key,nova,cinder,glance,s-proxy,neutron,sahara"
+SSL_ENABLED_SERVICES="key,nova,cinder,glance,s-proxy,neutron"
 
 if is_service_enabled tls-proxy && [ "$USE_SSL" == "True" ]; then
     die $LINENO "tls-proxy and SSL are mutually exclusive"
@@ -682,6 +682,9 @@ save_stackenv $LINENO
 # Source it so the entire environment is available
 echo_summary "Installing package prerequisites"
 source $TOP_DIR/tools/install_prereqs.sh
+
+# Normalise USE_CONSTRAINTS
+USE_CONSTRAINTS=$(trueorfalse False USE_CONSTRAINTS)
 
 # Configure an appropriate Python environment
 if [[ "$OFFLINE" != "True" ]]; then
