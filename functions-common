@@ -1342,7 +1342,7 @@ function screen_stop_service {
 
     if is_service_enabled $service; then
         # Clean up the screen window
-        screen -S $SCREEN_NAME -p $service -X kill
+        screen -S $SCREEN_NAME -p $service -X kill || true
     fi
 }
 
@@ -1683,7 +1683,7 @@ function disable_service {
 # ``ENABLED_SERVICES`` list, if they are not already present.
 #
 # For example:
-#   enable_service qpid
+#   enable_service q-svc
 #
 # This function does not know about the special cases
 # for nova, glance, and neutron built into is_service_enabled().

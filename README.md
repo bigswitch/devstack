@@ -117,19 +117,13 @@ following in the `localrc` section:
 
 # RPC Backend
 
-Multiple RPC backends are available. Currently, this
-includes RabbitMQ (default), Qpid, and ZeroMQ. Your backend of
-choice may be selected via the `localrc` section.
+Support for a RabbitMQ RPC backend is included. Additional RPC backends may
+be available via external plugins.  Enabling or disabling RabbitMQ is handled
+via the usual service functions and ``ENABLED_SERVICES``.
 
-Note that selecting more than one RPC backend will result in a failure.
+Example disabling RabbitMQ in ``local.conf``:
 
-Example (ZeroMQ):
-
-    ENABLED_SERVICES="$ENABLED_SERVICES,-rabbit,-qpid,zeromq"
-
-Example (Qpid):
-
-    ENABLED_SERVICES="$ENABLED_SERVICES,-rabbit,-zeromq,qpid"
+    disable_service rabbit
 
 # Apache Frontend
 
