@@ -27,13 +27,6 @@ set -o xtrace
 # Make sure custom grep options don't get in the way
 unset GREP_OPTIONS
 
-# Sanitize language settings to avoid commands bailing out
-# with "unsupported locale setting" errors.
-unset LANG
-unset LANGUAGE
-LC_ALL=C
-export LC_ALL
-
 # Make sure umask is sane
 umask 022
 
@@ -1182,7 +1175,7 @@ if is_service_enabled g-reg; then
     fi
 
     for image_url in ${IMAGE_URLS//,/ }; do
-        upload_image $image_url $TOKEN
+        upload_image $image_url
     done
 fi
 
