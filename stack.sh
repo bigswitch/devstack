@@ -93,6 +93,15 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
+# Provide a safety switch for devstack. If you do a lot of devstack,
+# on a lot of different environments, you sometimes run it on the
+# wrong box. This makes there be a way to prevent that.
+if [[ -e $HOME/.no-devstack ]]; then
+    echo "You've marked this host as a no-devstack host, to save yourself from"
+    echo "running devstack accidentally. If this is in error, please remove the"
+    echo "~/.no-devstack file"
+    exit 1
+fi
 
 # Prepare the environment
 # -----------------------
@@ -306,9 +315,6 @@ sudo mkdir -p $DEST
 safe_chown -R $STACK_USER $DEST
 safe_chmod 0755 $DEST
 
-# Basic test for ``$DEST`` path permissions (fatal on error unless skipped)
-check_path_perm_sanity ${DEST}
-
 # Destination path for service data
 DATA_DIR=${DATA_DIR:-${DEST}/data}
 sudo mkdir -p $DATA_DIR
@@ -443,6 +449,8 @@ if [[ -n "$SCREEN_LOGDIR" ]]; then
     fi
 fi
 
+# Basic test for ``$DEST`` path permissions (fatal on error unless skipped)
+check_path_perm_sanity ${DEST}
 
 # Configure Error Traps
 # ---------------------
