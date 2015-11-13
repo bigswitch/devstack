@@ -99,10 +99,10 @@ fi
 # this explicit as it has come up on the mailing list.
 if [[ -n "$VIRTUAL_ENV" ]]; then
     echo "You appear to be running under a python virtualenv."
-    echo "DevStack does not support this, as we my break the"
+    echo "DevStack does not support this, as we may break the"
     echo "virtualenv you are currently in by modifying "
     echo "external system-level components the virtualenv relies on."
-    echo "We reccommend you use a separate virtual-machine if "
+    echo "We recommend you use a separate virtual-machine if "
     echo "you are worried about DevStack taking over your system."
     exit 1
 fi
@@ -334,6 +334,10 @@ LOCAL_HOSTNAME=`hostname -s`
 if [ -z "`grep ^127.0.0.1 /etc/hosts | grep $LOCAL_HOSTNAME`" ]; then
     sudo sed -i "s/\(^127.0.0.1.*\)/\1 $LOCAL_HOSTNAME/" /etc/hosts
 fi
+
+# Ensure python is installed
+# --------------------------
+is_package_installed python || install_package python
 
 
 # Configure Logging

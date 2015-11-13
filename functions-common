@@ -1036,7 +1036,7 @@ function _parse_package_files {
                 # We are using BASH regexp matching feature.
                 package=${BASH_REMATCH[1]}
                 distros=${BASH_REMATCH[2]}
-                # In bash ${VAR,,} will lowecase VAR
+                # In bash ${VAR,,} will lowercase VAR
                 # Look for a match in the distro list
                 if [[ ! ${distros,,} =~ ${DISTRO,,} ]]; then
                     # If no match then skip this package
@@ -1352,6 +1352,7 @@ function is_running {
 # If the command includes shell metachatacters (;<>*) it must be run using a shell
 # If an optional group is provided sg will be used to run the
 # command as that group.
+# Uses globals ``USE_SCREEN``
 # run_process service "command-line" [group]
 function run_process {
     local service=$1
@@ -1370,7 +1371,7 @@ function run_process {
 
 # Helper to launch a process in a named screen
 # Uses globals ``CURRENT_LOG_TIME``, ```LOGDIR``, ``SCREEN_LOGDIR``, `SCREEN_NAME``,
-# ``SERVICE_DIR``, ``USE_SCREEN``, ``SCREEN_IS_LOGGING``
+# ``SERVICE_DIR``, ``SCREEN_IS_LOGGING``
 # screen_process name "command-line" [group]
 # Run a command in a shell in a screen window, if an optional group
 # is provided, use sg to set the group of the command.
@@ -1381,7 +1382,6 @@ function screen_process {
 
     SCREEN_NAME=${SCREEN_NAME:-stack}
     SERVICE_DIR=${SERVICE_DIR:-${DEST}/status}
-    USE_SCREEN=$(trueorfalse True USE_SCREEN)
 
     screen -S $SCREEN_NAME -X screen -t $name
 
@@ -1465,14 +1465,13 @@ function screen_rc {
 # If a PID is available use it, kill the whole process group via TERM
 # If screen is being used kill the screen window; this will catch processes
 # that did not leave a PID behind
-# Uses globals ``SCREEN_NAME``, ``SERVICE_DIR``, ``USE_SCREEN``
+# Uses globals ``SCREEN_NAME``, ``SERVICE_DIR``
 # screen_stop_service service
 function screen_stop_service {
     local service=$1
 
     SCREEN_NAME=${SCREEN_NAME:-stack}
     SERVICE_DIR=${SERVICE_DIR:-${DEST}/status}
-    USE_SCREEN=$(trueorfalse True USE_SCREEN)
 
     if is_service_enabled $service; then
         # Clean up the screen window
@@ -1490,7 +1489,6 @@ function stop_process {
     local service=$1
 
     SERVICE_DIR=${SERVICE_DIR:-${DEST}/status}
-    USE_SCREEN=$(trueorfalse True USE_SCREEN)
 
     if is_service_enabled $service; then
         # Kill via pid if we have one available
@@ -1509,7 +1507,7 @@ function stop_process {
                 # this fixed in all services:
                 # https://bugs.launchpad.net/oslo-incubator/+bug/1446583
                 sleep 1
-                # /bin/true becakse pkill on a non existant process returns an error
+                # /bin/true because pkill on a non existent process returns an error
                 pkill -g $(cat $SERVICE_DIR/$SCREEN_NAME/$service.pid) || /bin/true
             fi
             rm $SERVICE_DIR/$SCREEN_NAME/$service.pid
@@ -1552,11 +1550,11 @@ function service_check {
 }
 
 # Tail a log file in a screen if USE_SCREEN is true.
+# Uses globals ``USE_SCREEN``
 function tail_log {
     local name=$1
     local logfile=$2
 
-    USE_SCREEN=$(trueorfalse True USE_SCREEN)
     if [[ "$USE_SCREEN" = "True" ]]; then
         screen_process "$name" "sudo tail -f $logfile"
     fi
@@ -1717,7 +1715,7 @@ function plugin_override_defaults {
         if [[ -f $dir/devstack/override-defaults ]]; then
             # be really verbose that an override is happening, as it
             # may not be obvious if things fail later.
-            echo "$plugin has overriden the following defaults"
+            echo "$plugin has overridden the following defaults"
             cat $dir/devstack/override-defaults
             source $dir/devstack/override-defaults
         fi
