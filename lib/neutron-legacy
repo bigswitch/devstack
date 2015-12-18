@@ -802,6 +802,7 @@ function _move_neutron_addresses_route {
 
         local IP_ADD=""
         local IP_DEL=""
+        local IP_UP=""
         local DEFAULT_ROUTE_GW
         DEFAULT_ROUTE_GW=$(ip -f $af r | awk "/default.+$from_intf/ { print \$3; exit }")
         local ADD_OVS_PORT=""
@@ -819,9 +820,10 @@ function _move_neutron_addresses_route {
         if [[ "$IP_BRD" != "" ]]; then
             IP_DEL="sudo ip addr del $IP_BRD dev $from_intf"
             IP_ADD="sudo ip addr add $IP_BRD dev $to_intf"
+            IP_UP="sudo ip link set $to_intf up"
         fi
 
-        $IP_DEL; $IP_ADD; $ADD_OVS_PORT; $ADD_DEFAULT_ROUTE
+        $IP_DEL; $IP_ADD; $IP_UP; $ADD_OVS_PORT; $ADD_DEFAULT_ROUTE
     fi
 }
 
@@ -1086,8 +1088,10 @@ function _configure_neutron_fwaas {
 }
 
 function _configure_neutron_vpn {
-    if [ -f $NEUTRON_VPNAAS_DIR/etc/neutron_vpnaas.conf ]; then
-        cp $NEUTRON_VPNAAS_DIR/etc/neutron_vpnaas.conf $NEUTRON_CONF_DIR
+    # Uses oslo config generator to generate VPNaaS sample configuration files
+    (cd $NEUTRON_VPNAAS_DIR && exec ./tools/generate_config_file_samples.sh)
+    if [ -f $NEUTRON_VPNAAS_DIR/etc/neutron_vpnaas.conf.sample ]; then
+        cp $NEUTRON_VPNAAS_DIR/etc/neutron_vpnaas.conf.sample $NEUTRON_CONF_DIR/neutron_vpnaas.conf
     fi
     neutron_vpn_install_agent_packages
     neutron_vpn_configure_common
@@ -1335,7 +1339,7 @@ function _neutron_configure_router_v4 {
                 sudo ip addr add $ext_gw_ip/$cidr_len dev $ext_gw_interface
                 sudo ip link set $ext_gw_interface up
             fi
-            ROUTER_GW_IP=`neutron port-list -c fixed_ips -c device_owner | grep router_gateway | awk -F '"' -v subnet_id=$PUB_SUBNET_ID '$4 == subnet_id { print $8; }'`
+            ROUTER_GW_IP=`neutron port-list -c fixed_ips -c device_owner | grep router_gateway | awk -F'ip_address'  '{ print $2 }' | cut -f3 -d\" | tr '\n' ' '`
             die_if_not_set $LINENO ROUTER_GW_IP "Failure retrieving ROUTER_GW_IP"
             sudo ip route replace  $FIXED_RANGE via $ROUTER_GW_IP
         fi
@@ -1366,7 +1370,7 @@ function _neutron_configure_router_v6 {
         sudo sysctl -w net.ipv6.conf.all.forwarding=1
         # Configure and enable public bridge
         # Override global IPV6_ROUTER_GW_IP with the true value from neutron
-        IPV6_ROUTER_GW_IP=`neutron port-list -c fixed_ips | grep $ipv6_pub_subnet_id | awk -F '"' -v subnet_id=$ipv6_pub_subnet_id '$4 == subnet_id { print $8; }'`
+        IPV6_ROUTER_GW_IP=`neutron port-list -c fixed_ips | grep $ipv6_pub_subnet_id | awk -F'ip_address' '{ print $2 }' | cut -f3 -d\" | tr '\n' ' '`
         die_if_not_set $LINENO IPV6_ROUTER_GW_IP "Failure retrieving IPV6_ROUTER_GW_IP"
 
         if is_neutron_ovs_base_plugin; then
