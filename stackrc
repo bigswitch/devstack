@@ -15,7 +15,7 @@ LC_ALL=C
 export LC_ALL
 
 # Make tracing more educational
-export PS4='+ ${BASH_SOURCE}:${FUNCNAME[0]}:L${LINENO}:   '
+export PS4='+ ${BASH_SOURCE:-}:${FUNCNAME[0]:-}:L${LINENO:-}:   '
 
 # Find the other rc files
 RC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
@@ -483,6 +483,10 @@ GITBRANCH["ironic-lib"]=${IRONIC_LIB_BRANCH:-master}
 # this doesn't exist in a lib file, so set it here
 GITDIR["ironic-lib"]=$DEST/ironic-lib
 
+# diskimage-builder tool
+GITREPO["diskimage-builder"]=${DIB_REPO:-${GIT_BASE}/openstack/diskimage-builder.git}
+GITBRANCH["diskimage-builder"]=${DIB_BRANCH:-master}
+GITDIR["diskimage-builder"]=$DEST/diskimage-builder
 
 ##################
 #
