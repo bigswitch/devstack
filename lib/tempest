@@ -321,7 +321,10 @@ function configure_tempest {
     local tmp_cfg_file
     tmp_cfg_file=$(mktemp)
     cd $TEMPEST_DIR
-    tox -revenv -- tempest verify-config -u -r -o $tmp_cfg_file
+    tox -revenv --notest
+    # NOTE(mtreinish): Respect constraints on tempest verify-config venv
+    tox -evenv -- pip install -c $REQUIREMENTS_DIR/upper-constraints.txt -r requirements.txt
+    tox -evenv -- tempest verify-config -uro $tmp_cfg_file
 
     local compute_api_extensions=${COMPUTE_API_EXTENSIONS:-"all"}
     if [[ ! -z "$DISABLE_COMPUTE_API_EXTENSIONS" ]]; then
@@ -450,10 +453,6 @@ function configure_tempest {
     iniset $TEMPEST_CONFIG validation network_for_ssh $PRIVATE_NETWORK_NAME
 
     # Volume
-    # TODO(dkranz): Remove the bootable flag when Juno is end of life.
-    iniset $TEMPEST_CONFIG volume-feature-enabled bootable True
-    # TODO(jordanP): Remove the extend_with_snapshot flag when Juno is end of life.
-    iniset $TEMPEST_CONFIG volume-feature-enabled extend_with_snapshot True
     # TODO(obutenko): Remove the incremental_backup_force flag when Kilo and Juno is end of life.
     iniset $TEMPEST_CONFIG volume-feature-enabled incremental_backup_force True
     # TODO(ynesenenko): Remove the volume_services flag when Liberty and Kilo will correct work with host info.
@@ -588,6 +587,10 @@ function install_tempest {
     pip_install tox
     pushd $TEMPEST_DIR
     tox --notest -efull
+    # NOTE(mtreinish) Respect constraints in the tempest full venv, things that
+    # are using a tox job other than full will not be respecting constraints but
+    # running pip install -U on tempest requirements
+    $TEMPEST_DIR/.tox/full/bin/pip install -c $REQUIREMENTS_DIR/upper-constraints.txt -r requirements.txt
     PROJECT_VENV["tempest"]=${TEMPEST_DIR}/.tox/full
     install_tempest_lib
     popd
