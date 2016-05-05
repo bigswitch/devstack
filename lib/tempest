@@ -180,8 +180,6 @@ function configure_tempest {
     local admin_username=${ADMIN_USERNAME:-admin}
     local admin_project_name=${ADMIN_TENANT_NAME:-admin}
     local admin_domain_name=${ADMIN_DOMAIN_NAME:-Default}
-    local tempest_username=${TEMPEST_USERNAME:-demo}
-    local tempest_project_name=${TEMPEST_TENANT_NAME:-demo}
     local alt_username=${ALT_USERNAME:-alt_demo}
     local alt_project_name=${ALT_TENANT_NAME:-alt_demo}
     local admin_project_id
@@ -594,8 +592,13 @@ function install_tempest {
     # NOTE(mtreinish) Respect constraints in the tempest full venv, things that
     # are using a tox job other than full will not be respecting constraints but
     # running pip install -U on tempest requirements
-    $TEMPEST_DIR/.tox/full/bin/pip install -c $REQUIREMENTS_DIR/upper-constraints.txt -r requirements.txt
-    PROJECT_VENV["tempest"]=${TEMPEST_DIR}/.tox/full
+    if [[ -d .tox/tempest ]] ; then
+        $TEMPEST_DIR/.tox/tempest/bin/pip install -c $REQUIREMENTS_DIR/upper-constraints.txt -r requirements.txt
+        PROJECT_VENV["tempest"]=${TEMPEST_DIR}/.tox/tempest
+    else
+        $TEMPEST_DIR/.tox/full/bin/pip install -c $REQUIREMENTS_DIR/upper-constraints.txt -r requirements.txt
+        PROJECT_VENV["tempest"]=${TEMPEST_DIR}/.tox/full
+    fi
     popd
 }
 
